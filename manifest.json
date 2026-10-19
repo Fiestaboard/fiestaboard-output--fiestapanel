@@ -1,7 +1,7 @@
 {
   "id": "fiestapanel",
   "name": "FiestaPanel",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Any TV or browser: a full-screen board FiestaBoard draws itself.",
   "author": "FiestaBoard",
   "icon": "monitor",

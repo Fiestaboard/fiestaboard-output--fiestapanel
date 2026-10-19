@@ -13,7 +13,7 @@ import pytest
 from plugins.fiestapanel import FiestaPanelOutput
 from plugins.fiestapanel.output import board_dimensions
 from src.outputs.conformance import OutputConformanceSuite
-from src.plugins import CancelToken
+from src.plugins import BoardToken, CancelToken
 from src.plugins.manifest import load_manifest
 
 PLUGIN_DIR = Path(__file__).resolve().parents[1]
@@ -106,6 +106,24 @@ class TestWrites:
         result = panel.write(_grid(6, 22), native=None, cancel=CancelToken())
         assert (result.success, result.was_sent) == (False, False)
 
+    def test_rich_frame_of_another_shape_is_refused(self, manifest):
+        panel = _panel(manifest, {"device_type": "note"})
+        rich = [[BoardToken(type="char", value="a")] * 22 for _ in range(6)]
+        result = panel.write_cells(rich, native=None, cancel=CancelToken())
+        assert (result.success, result.was_sent) == (False, False)
+
+    def test_rich_frame_of_the_boards_shape_is_accepted_without_mutation(self, manifest):
+        class LayeredCells(list):
+            layers = ("opaque pixel payload",)
+
+        panel = _panel(manifest, {"device_type": "note"})
+        token = BoardToken(type="char", value="a", color="red")
+        rich = LayeredCells([[token] * 15 for _ in range(3)])
+        result = panel.write_cells(rich, native=None, cancel=CancelToken())
+        assert (result.success, result.was_sent) == (True, True)
+        assert rich[0][0] == token
+        assert rich.layers == ("opaque pixel payload",)
+
 
 class TestDeclarations:
     def test_a_pulled_screen_with_no_native_strategy(self, manifest):
@@ -134,8 +152,12 @@ class TestDeclarations:
         assert panel.test_connection() is True
         assert panel.check_connection().success is True
 
-    def test_its_content_keeps_split_flap_markup(self):
-        assert FiestaPanelOutput.markup_follows_charset is False
-
     def test_it_declares_both_render_styles(self, manifest):
         assert manifest.output.device_model_ids == ("fiestapanel_split_flap", "fiestapanel_led_matrix")
+
+    @pytest.mark.parametrize(("model_index", "charset", "lowercase"), [(0, "vestaboard_v2", False), (1, "led_5x7", True)])
+    def test_bound_model_selects_the_content_alphabet(self, manifest, model_index, charset, lowercase):
+        panel = _panel(manifest, {"device_type": "note"})
+        panel.bind_board(device_model=manifest.output.model(model_index), geometry=(3, 15))
+        assert panel.character_set["id"] == charset
+        assert ("a" in panel.character_set["chars"]) is lowercase

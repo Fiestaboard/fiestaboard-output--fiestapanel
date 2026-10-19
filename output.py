@@ -69,10 +69,6 @@ class FiestaPanelOutput(OutputPluginBase):
 
     plugin_id = "fiestapanel"
 
-    #: The viewer draws the 0–71 grid itself, so content keeps split-flap
-    #: markup whatever the panel's look (its LED model's set is rich).
-    markup_follows_charset = False
-
     def __init__(self, board_id: str | None, config: dict[str, Any]) -> None:
         super().__init__(board_id, config)
         self.rows, self.cols = board_dimensions(self.config)
@@ -151,6 +147,10 @@ class FiestaPanelOutput(OutputPluginBase):
             return WriteResult(False, False)
         logger.debug("Virtual board frame stored (%d×%d)", self.rows, self.cols)
         return WriteResult(True, True)
+
+    def write_cells(self, cells: Any, *, native: Any, cancel: Any) -> WriteResult:
+        """Accept rich LED cells and their canvas layers for core's pull-frame store."""
+        return self.write(cells, native=native, cancel=cancel)
 
     def check_connection(self) -> ConnectionCheck:
         """A panel is always reachable: FiestaBoard is the device."""

@@ -38,6 +38,7 @@ A FiestaPanel has no connection to configure. Its shape belongs to the board:
 - Pull delivery: nothing is pushed to a device; the viewer fetches the last frame
 - A frame of the wrong shape (after the panel was re-fit to a new screen) is never served
 - Two looks from one board: split-flap and LED matrix (`fiestapanel_split_flap`, `fiestapanel_led_matrix`)
+- LED panels retain rich text, colors, icons, and pixel canvas layers in core's frame store for compatible TV and browser viewers. Pixel-only changes and layer removal update the frame; identical frames are deduplicated. Split-flap panels retain their integer character grid.
 - No send floor and no connection to fail
 
 ## Development
